@@ -1,8 +1,8 @@
-from rest_framework import viewsets
-
+from rest_framework import viewsets, filters
 from candle_co import settings
 from .permissions import IsAdminOrReadOnly
-from rest_framework.decorators import api_view
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 import stripe
 from .models import Product
@@ -14,10 +14,23 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
 
+    # Set filtering
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_fields = ['category']
+    ordering_fields = ['price', 'created_at', 'name']
+    search_fields = ['name', 'description']
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+
+    @action(detail=False, methods=['get'], url_path='categories')
+    def get_categories(self, request):
+        categories = Product.objects.values_list('category', flat=True).distinct()
+        # Optionally filter out None or empty strings:
+        unique_categories = sorted([cat for cat in categories if cat])
+        return Response(unique_categories)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
