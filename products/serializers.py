@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product
+from .models import Product, ProductImages
 
 class ProductSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -15,3 +15,8 @@ class ProductSerializer(serializers.ModelSerializer):
         elif obj.image:
             return obj.image.url  # fallback
         return None
+
+class ProductImagesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImages
+        fields = '__all__'

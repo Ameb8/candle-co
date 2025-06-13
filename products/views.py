@@ -1,13 +1,15 @@
 from rest_framework import viewsets, filters
 from candle_co import settings
 from .permissions import IsAdminOrReadOnly
+from django.db.models import Max
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 import stripe
-from .models import Product
-from .serializers import ProductSerializer
+from .models import Product, ProductImages
+from .serializers import ProductSerializer, ProductImagesSerializer
 from .permissions import IsAdminOrReadOnly
+from .filters import ProductFilter
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -16,9 +18,12 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     # Set filtering
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
-    filterset_fields = ['category']
+    filterset_class = ProductFilter
     ordering_fields = ['price', 'created_at', 'name']
     search_fields = ['name', 'description']
+
+    def get_queryset(self):
+        return Product.objects.filter(amount__gte=1)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -28,9 +33,33 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='categories')
     def get_categories(self, request):
         categories = Product.objects.values_list('category', flat=True).distinct()
-        # Optionally filter out None or empty strings:
         unique_categories = sorted([cat for cat in categories if cat])
         return Response(unique_categories)
+
+    @action(detail=True, methods=['get'], url_path='all-images')
+    def get_all_images(self, request, pk=None):
+        # Get Product and its thumbnail image
+        product = self.get_object()
+        base_image_url = request.build_absolute_uri(product.image.url) if product.image else None
+
+        # Get the rest of images
+        related_images = product.images.all()  # thanks to related_name='images'
+        image_urls = [request.build_absolute_uri(img.image.url) for img in related_images]
+
+        if base_image_url: # Create combined list
+            image_urls.insert(0, base_image_url)
+
+        return Response({'images': image_urls})
+
+class ProductImagesViewSet(viewsets.ModelViewSet):
+    queryset = ProductImages.objects.all()
+    serializer_class = ProductImagesSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+@api_view(['GET'])
+def max_price_available_product(request):
+    max_price = Product.objects.filter(amount__gte=1).aggregate(Max('price'))['price__max']
+    return Response({'max_price': max_price})
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
