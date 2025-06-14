@@ -1,9 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+router.register(r'page-design', views.SingletonPageDesignViewSet, basename='pagedesign')
+router.register(r'image-in-list', views.ImageInListViewSet, basename='image-in-list')
+
 urlpatterns = [
-    path('add-img', views.add_image, name='add_image'),
-    path('move-img', views.move_image, name='move_image'),
-    path('get-img', views.get_images, name='get_images'),
-    path('remove-img', views.remove_image, name='remove_image'),
+    path('', include(router.urls)),
 ]
