@@ -106,10 +106,10 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 # Cookies
 
 SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
 
 CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = False
 
 CSRF_TRUSTED_ORIGINS = [
     "http://192.168.1.78:5173",
@@ -174,6 +174,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# API Keys
-
+# Stripe keys
 STRIPE_SECRET_KEY = os.getenv('STRIPE_PRIVATE')
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC')
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+
