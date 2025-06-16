@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'products',
     'accounts',
+    'orders',
     'page_design',
     'sslserver',
 ]
