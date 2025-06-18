@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'orders',
     'page_design',
     'sslserver',
+    'ordered_model',
 ]
 
 MIDDLEWARE = [
