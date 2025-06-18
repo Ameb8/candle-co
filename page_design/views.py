@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+from django.db import transaction
 from django.db.models import Max, F
 from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.http import require_POST
@@ -95,20 +96,35 @@ class ImageInListViewSet(viewsets.ModelViewSet):
         return ImageInListSerializer
 
     def get_queryset(self):
-        # Optional filtering by list
         list_name = self.request.query_params.get('list_name')
+        qs = self.queryset
         if list_name:
-            return self.queryset.filter(image_list__name=list_name)
-        return self.queryset.order_by('position')
+            qs = qs.filter(image_list__name=list_name)
+        return qs.order_by('position')
 
     @action(detail=False, methods=['post'], permission_classes=[permissions.IsAdminUser])
     def reorder(self, request):
-        ordered_ids = request.data.get('ordered_ids')  # [3, 5, 1, 8]
+        ordered_ids = request.data
         if not ordered_ids:
             return Response({'error': 'No ordered_ids provided'}, status=400)
 
-        for i, id in enumerate(ordered_ids):
-            ImageInList.objects.filter(id=id).update(position=i + 1)
+        with transaction.atomic():
+            objs = list(ImageInList.objects.filter(id__in=ordered_ids))
+            id_to_obj = {obj.id: obj for obj in objs}
+
+            # Assign temporary positions
+            for obj in objs:
+                obj.position += 10000
+
+            ImageInList.objects.bulk_update(objs, ['position'])
+
+            # Assign final positions
+            for i, id in enumerate(ordered_ids):
+                obj = id_to_obj.get(id)
+                if obj:
+                    obj.position = i + 1
+
+            ImageInList.objects.bulk_update(objs, ['position'])
 
         return Response({'status': 'reordered'})
 
