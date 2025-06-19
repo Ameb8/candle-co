@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-1_!y1nqq&cu&hlhszzfl^u9*k_a!tr#8+*3hg2z)#14cskla9!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.78', '5ed0-2600-6c54-4e00-120d-8d9d-f9f0-4152-6fb4.ngrok-free.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.78', '192.168.1.77']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'orders',
     'page_design',
     'sslserver',
+    'ordered_model',
 ]
 
 MIDDLEWARE = [
@@ -115,6 +116,7 @@ CSRF_COOKIE_SECURE = False
 CSRF_TRUSTED_ORIGINS = [
     "http://192.168.1.78:5173",
     "http://localhost:5173",
+    "http://192.168.1.77:5173",
 ]
 
 # Database

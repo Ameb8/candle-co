@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.db import transaction
@@ -77,17 +78,17 @@ class SingletonPageDesignViewSet(viewsets.ViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ImageInListViewSet(viewsets.ModelViewSet):
-    queryset = ImageInList.objects.select_related('image', 'image_list').all()
-    # permission_classes = [permissions.IsAdminUser]
+    queryset = ImageInList.objects.select_related('image', 'image_list')
+    permission_classes = [IsStaffOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_permissions(self):
-        # Allow unauthenticated GET if querying for 'about' or 'contact'
         if self.action == 'list':
             list_name = self.request.query_params.get('list_name')
             if self.request.method == 'GET' and list_name in ['about', 'contact']:
                 return [permissions.AllowAny()]
-        # All other actions require admin
         return [permissions.IsAdminUser()]
 
     def get_serializer_class(self):
@@ -100,9 +101,35 @@ class ImageInListViewSet(viewsets.ModelViewSet):
         qs = self.queryset
         if list_name:
             qs = qs.filter(image_list__name=list_name)
-        return qs.order_by('position')
+        return qs.order_by('order')
 
-    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=['post'])
+    def move_up(self, request, pk=None):
+        obj = self.get_object()
+        obj.up()
+        return Response({'status': 'moved up'})
+
+    @action(detail=True, methods=['post'])
+    def move_down(self, request, pk=None):
+        obj = self.get_object()
+        obj.down()
+        return Response({'status': 'moved down'})
+
+    @action(detail=True, methods=['post'])
+    def move_to(self, request, pk=None):
+        obj = self.get_object()
+        new_position = request.data.get('position')
+        if new_position is None:
+            return Response({'error': 'Missing position'}, status=400)
+        obj.to(int(new_position))
+        return Response({'status': f'moved to {new_position}'})
+
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=[permissions.IsAdminUser],
+        parser_classes=[JSONParser]
+    )
     def reorder(self, request):
         ordered_ids = request.data
         if not ordered_ids:
@@ -112,19 +139,35 @@ class ImageInListViewSet(viewsets.ModelViewSet):
             objs = list(ImageInList.objects.filter(id__in=ordered_ids))
             id_to_obj = {obj.id: obj for obj in objs}
 
-            # Assign temporary positions
-            for obj in objs:
-                obj.position += 10000
-
-            ImageInList.objects.bulk_update(objs, ['position'])
-
-            # Assign final positions
             for i, id in enumerate(ordered_ids):
                 obj = id_to_obj.get(id)
                 if obj:
-                    obj.position = i + 1
-
-            ImageInList.objects.bulk_update(objs, ['position'])
+                    obj.order = i
+            ImageInList.objects.bulk_update(objs, ['order'])
 
         return Response({'status': 'reordered'})
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def add_image_to_list(self, request):
+        # Expect 'image' (file) and 'list_name' (str) in request.FILES and request.data
+        image_file = request.FILES.get('image')
+        list_name = request.data.get('list_name')
+
+        if not image_file or not list_name:
+            return Response({'error': 'Both image file and list_name are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            image_list = ImageList.objects.get(name=list_name)
+        except ImageList.DoesNotExist:
+            return Response({'error': f'List with name "{list_name}" not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Create DesignImage
+        design_image = DesignImage.objects.create(image=image_file)
+
+        # Create ImageInList to add image to the list
+        image_in_list = ImageInList.objects.create(image=design_image, image_list=image_list)
+
+        serializer = ImageInListSerializer(image_in_list)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 

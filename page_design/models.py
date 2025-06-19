@@ -1,4 +1,5 @@
 from django.db import models
+from ordered_model.models import OrderedModel
 
 class PageDesign(models.Model):
     about_us_title = models.CharField(max_length=50)
@@ -16,12 +17,9 @@ class ImageList(models.Model):
     ]
     name = models.CharField(max_length=20, choices=LIST_CHOICES, unique=True)
 
-class ImageInList(models.Model):
+class ImageInList(OrderedModel):
     image = models.ForeignKey(DesignImage, on_delete=models.CASCADE)
     image_list = models.ForeignKey(ImageList, on_delete=models.CASCADE)
-    position = models.PositiveIntegerField()
 
     class Meta:
-        unique_together = ('image_list', 'position')
-        ordering = ['position']
-
+        order_with_respect_to = 'image_list'
