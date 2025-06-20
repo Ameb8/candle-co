@@ -1,5 +1,6 @@
 from django.db import models
 from ordered_model.models import OrderedModel
+from cloudinary.models import CloudinaryField
 
 class PageDesign(models.Model):
     about_us_title = models.CharField(max_length=50)
@@ -8,7 +9,7 @@ class PageDesign(models.Model):
     contact_mail = models.CharField(max_length=60)
 
 class DesignImage(models.Model):
-    image = models.ImageField(upload_to='design/', null=False, blank=False)
+    image = CloudinaryField('image', folder='page-design', null=False, blank=False)
 
 class ImageList(models.Model):
     LIST_CHOICES = [

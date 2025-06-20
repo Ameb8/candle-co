@@ -9,3 +9,4 @@ router.register(r'image-in-list', views.ImageInListViewSet, basename='image-in-l
 urlpatterns = [
     path('', include(router.urls)),
 ]
+
