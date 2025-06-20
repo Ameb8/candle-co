@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from corsheaders.defaults import default_headers
+import cloudinary
 
 load_dotenv()
 
@@ -68,6 +69,13 @@ STRIPE_SECRET_KEY = os.getenv('STRIPE_PRIVATE')
 STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC')
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
+
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_NAME'),
+    api_key=os.getenv('CLOUDINARY_PUBLIC'),
+    api_secret=os.getenv('CLOUDINARY_SECRET')
+)
+
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_PUBLIC'),
@@ -111,3 +119,12 @@ TEMPLATES = [
         },
     },
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
+
