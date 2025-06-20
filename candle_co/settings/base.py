@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     'page_design',
     'sslserver',
     'ordered_model',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -66,10 +68,13 @@ STRIPE_SECRET_KEY = os.getenv('STRIPE_PRIVATE')
 STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC')
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
-UPLOADCARE = {
-    'pub_key': os.getenv('UPLOADCARE_PUB_KEY'),
-    'secret': os.getenv('UPLOADCARE_SECRET'),
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_PUBLIC'),
+    'API_SECRET': os.getenv('CLOUDINARY_SECRET')
 }
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
