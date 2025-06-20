@@ -147,7 +147,12 @@ class ImageInListViewSet(viewsets.ModelViewSet):
 
         return Response({'status': 'reordered'})
 
-    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=[permissions.IsAdminUser],
+        parser_classes=[MultiPartParser, FormParser]
+    )
     def add_image_to_list(self, request):
         # Expect 'image' (file) and 'list_name' (str) in request.FILES and request.data
         image_file = request.FILES.get('image')

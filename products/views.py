@@ -38,15 +38,13 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='all-images')
     def get_all_images(self, request, pk=None):
-        # Get Product and its thumbnail image
         product = self.get_object()
-        base_image_url = request.build_absolute_uri(product.image.url) if product.image else None
+        base_image_url = product.image if product.image else None
 
-        # Get the rest of images
-        related_images = product.images.all()  # thanks to related_name='images'
-        image_urls = [request.build_absolute_uri(img.image.url) for img in related_images]
+        related_images = product.images.all()
+        image_urls = [img.image for img in related_images if img.image]
 
-        if base_image_url: # Create combined list
+        if base_image_url:
             image_urls.insert(0, base_image_url)
 
         return Response({'images': image_urls})
@@ -61,7 +59,7 @@ def max_price_available_product(request):
     max_price = Product.objects.filter(amount__gte=1).aggregate(Max('price'))['price__max']
     return Response({'max_price': max_price})
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_key = settings.base.STRIPE_SECRET_KEY
 
 @api_view(['POST'])
 def create_checkout_session(request, product_id):
