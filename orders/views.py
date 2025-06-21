@@ -7,9 +7,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 import stripe
 import json
-from .models import Order, OrderItem, Address
+from .models import Order, OrderItem, Address, Shipment
 from products.models import Product
-from .serializers import CreateOrderSerializer, OrderSerializer, OrderItemDetailSerializer, AddressSerializer
+from .serializers import CreateOrderSerializer, OrderSerializer, OrderItemDetailSerializer, AddressSerializer, ShipmentSerializer
+from candle_co.permissions import IsAdminOrReadOnly
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET = settings.STRIPE_WEBHOOK_SECRET
@@ -135,3 +136,8 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
         except Address.DoesNotExist:
             return Response({'error': 'Address not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class ShipmentViewSet(viewsets.ModelViewSet):
+    queryset = Shipment.objects.all()
+    serializer_class = ShipmentSerializer
+    permission_classes = [IsAdminOrReadOnly]

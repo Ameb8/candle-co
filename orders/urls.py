@@ -4,6 +4,7 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'admin/orders', views.AdminOrderViewSet, basename='admin-orders')
+router.register(r'shipments', views.ShipmentViewSet)
 
 urlpatterns = [
     path('create-order/', views.CreateOrderView.as_view(), name='create-order'),
