@@ -1,16 +1,26 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser
 from rest_framework import status, viewsets, permissions, filters
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 import stripe
 import json
-from .models import Order, OrderItem, Address, Shipment
+from .models import Order, OrderItem, Address, Shipment, PhoneAlert
 from products.models import Product
-from .serializers import CreateOrderSerializer, OrderSerializer, OrderItemDetailSerializer, AddressSerializer, ShipmentSerializer
 from candle_co.permissions import IsAdminOrReadOnly
+from .serializers import (
+    CreateOrderSerializer,
+    OrderSerializer,
+    OrderItemDetailSerializer,
+    AddressSerializer,
+    ShipmentSerializer,
+    PublicOrderSummarySerializer,
+    PhoneAlertSerializer
+)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET = settings.STRIPE_WEBHOOK_SECRET
@@ -141,3 +151,25 @@ class ShipmentViewSet(viewsets.ModelViewSet):
     queryset = Shipment.objects.all()
     serializer_class = ShipmentSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def perform_create(self, serializer):
+        # Save the shipment first
+        shipment = serializer.save()
+
+        # Update the related order's status
+        order = shipment.order
+        order.status = 'fulfilled'
+        order.save()
+
+class PublicOrderLookupView(APIView):
+    permission_classes = []
+
+    def get(self, request, order_code):
+        order = get_object_or_404(Order.objects.prefetch_related('items__product', 'shipments'), order_code=order_code)
+        serializer = PublicOrderSummarySerializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class PhoneAlertViewSet(viewsets.ModelViewSet):
+    queryset = PhoneAlert.objects.all()
+    serializer_class = PhoneAlertSerializer
+    permission_classes = [IsAdminUser]

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from phonenumber_field.modelfields import PhoneNumberField
 import uuid
 
 class Address(models.Model):
@@ -60,3 +61,17 @@ class Shipment(models.Model):
     def __str__(self):
         return f"Shipment for Order {self.order.order_code}"
 
+class PhoneAlert(models.Model):
+    CARRIER_CHOICES = [
+        ('verizon', 'Verizon'),
+        ('att', 'AT&T'),
+        ('tmobile', 'T-Mobile'),
+        ('sprint', 'Sprint'),
+        ('boost', 'Boost'),
+    ]
+
+    number = PhoneNumberField(max_length=20)
+    carrier = models.CharField(max_length=20, choices=CARRIER_CHOICES)
+
+    def __str__(self):
+        return f"{self.phone_number} ({self.get_carrier_display()})"
