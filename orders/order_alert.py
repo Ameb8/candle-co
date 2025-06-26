@@ -3,7 +3,7 @@ from email.message import EmailMessage
 from dotenv import load_dotenv
 import os
 from .models import Order
-from .models import PhoneAlert
+from .models import PhoneAlert, EmailAlert
 
 def get_message(order):
     message = []
@@ -20,7 +20,27 @@ def get_message(order):
 def notify_order(order):
     EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
     EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
+    phone_alert(order, EMAIL_ADDRESS, EMAIL_PASSWORD)
+    email_alert(order, EMAIL_ADDRESS, EMAIL_PASSWORD)
 
+def email_alert(order, address, password):
+    try:
+        with smtplib.SMTP_SSL('smtp.mail.yahoo.com', 465) as smtp:
+            smtp.login(address, password)
+            emails = EmailAlert.objects.values_list('email', flat=True).iterator()
+
+            for recipient in emails:
+                msg = EmailMessage()
+                msg['Subject'] = 'Hello from Django'
+                msg['From'] = address
+                msg['To'] = recipient
+                msg.set_content(get_message(order))
+
+                smtp.send_message(msg)
+    except Exception as e:
+        print(f'Error sending email alert: {e}')
+
+def phone_alert(order, address, password):
     # Carrier domain lookup table
     CARRIER_GATEWAYS = {
         "att": "@txt.att.net",
@@ -35,12 +55,12 @@ def notify_order(order):
         msg = EmailMessage()
         msg.set_content(get_message(order))
         msg['Subject'] = "Order Notification"
-        msg['From'] = EMAIL_ADDRESS
+        msg['From'] = address
         msg['To'] = to_email
 
         try:
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-                smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            with smtplib.SMTP_SSL('smtp.mail.yahoo.com', 465) as smtp:
+                smtp.login(address, password)
                 smtp.send_message(msg)
         except Exception as e:
-            pass
+            print(f'Error sending phone alert: {e}')

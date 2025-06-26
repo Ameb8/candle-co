@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from phonenumber_field.serializerfields import PhoneNumberField as SerializerPhoneNumberField
-from .models import Order, OrderItem, Address, Shipment, PhoneAlert
+from .models import Order, OrderItem, Address, Shipment, PhoneAlert, EmailAlert
 from products.models import Product
 from products.serializers import ProductSerializer
 
@@ -83,3 +83,8 @@ class PhoneAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneAlert
         fields = '__all__'
+
+class EmailAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailAlert
+        fields = ['email']

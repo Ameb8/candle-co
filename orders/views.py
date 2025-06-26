@@ -9,7 +9,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 import stripe
 import json
-from .models import Order, OrderItem, Address, Shipment, PhoneAlert
+from .order_alert import notify_order
+from .models import Order, OrderItem, Address, Shipment, PhoneAlert, EmailAlert
 from products.models import Product
 from candle_co.permissions import IsAdminOrReadOnly
 from .serializers import (
@@ -19,7 +20,8 @@ from .serializers import (
     AddressSerializer,
     ShipmentSerializer,
     PublicOrderSummarySerializer,
-    PhoneAlertSerializer
+    PhoneAlertSerializer,
+    EmailAlertSerializer
 )
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -27,6 +29,7 @@ STRIPE_WEBHOOK_SECRET = settings.STRIPE_WEBHOOK_SECRET
 
 @csrf_exempt
 def stripe_webhook(request):
+    print("Payment Successful")
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
 
@@ -46,6 +49,7 @@ def stripe_webhook(request):
 
         try: # Update order object
             order = Order.objects.get(id=order_id)
+            notify_order(order)
             order.paid = True
             order.status = 'paid'
             order.stripe_payment_intent_id = intent['id']
@@ -172,4 +176,9 @@ class PublicOrderLookupView(APIView):
 class PhoneAlertViewSet(viewsets.ModelViewSet):
     queryset = PhoneAlert.objects.all()
     serializer_class = PhoneAlertSerializer
+    permission_classes = [IsAdminUser]
+
+class EmailAlertViewSet(viewsets.ModelViewSet):
+    queryset = EmailAlert.objects.all()
+    serializer_class = EmailAlertSerializer
     permission_classes = [IsAdminUser]

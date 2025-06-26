@@ -6,6 +6,7 @@ router = DefaultRouter()
 router.register(r'admin/orders', views.AdminOrderViewSet, basename='admin-orders')
 router.register(r'shipments', views.ShipmentViewSet)
 router.register(r'phone-numbers', views.PhoneAlertViewSet)
+router.register(r'email', views.EmailAlertViewSet, basename='email-alert')
 
 urlpatterns = [
     path('create-order/', views.CreateOrderView.as_view(), name='create-order'),

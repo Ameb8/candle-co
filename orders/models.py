@@ -4,14 +4,14 @@ from phonenumber_field.modelfields import PhoneNumberField
 import uuid
 
 class Address(models.Model):
-    full_name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255, null=True, blank=True)
     street_address = models.CharField(max_length=255)
     apartment_address = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     postal_code = models.CharField(max_length=20)
     country = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
 
     def __str__(self):
         return f"{self.full_name}, {self.street_address}, {self.city}"
@@ -19,7 +19,7 @@ class Address(models.Model):
 class Order(models.Model):
     # User info
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    email=models.EmailField()
+    email=models.EmailField(null=True, blank=True)
 
     # Shipping info
     order_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -75,3 +75,6 @@ class PhoneAlert(models.Model):
 
     def __str__(self):
         return f"{self.phone_number} ({self.get_carrier_display()})"
+
+class EmailAlert(models.Model):
+    email = models.EmailField(unique=True)

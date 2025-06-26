@@ -6,3 +6,6 @@ class OrderAdmin(admin.ModelAdmin):
 
 admin.site.register(models.Order)
 admin.site.register(models.OrderItem)
+admin.site.register(models.Shipment)
+admin.site.register(models.PhoneAlert)
+admin.site.register(models.EmailAlert)

@@ -1,4 +1,5 @@
 from .base import *
+import dj_database_url
 
 DEBUG = True
 
@@ -16,6 +17,15 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 DATABASES = {
+    'default': dj_database_url.config(
+        default=os.getenv('DB_URL'),
+        conn_max_age=0,
+        ssl_require=True
+    )
+}
+
+'''
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('DB_NAME'),
@@ -25,3 +35,4 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '3306'),
     }
 }
+'''
