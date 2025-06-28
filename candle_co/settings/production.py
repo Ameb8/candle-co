@@ -1,10 +1,10 @@
 from .base import *
 import dj_database_url
+import os
+from dotenv import load_dotenv
 
 DEBUG = False
-
-
-ALLOWED_HOSTS = ['candle-co.onrender.com']
+load_dotenv()
 
 # Security settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -15,16 +15,12 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://10.0.0.202:5173",
-    "http://10.0.0.202:5174",
-]
-
-# Production database (already hosted)
+# Production Database
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DB_URL'),
-        conn_max_age=600,  # persistent connections
+        conn_max_age=600,
         ssl_require=True
     )
 }
+
