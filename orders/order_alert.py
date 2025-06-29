@@ -5,6 +5,10 @@ import os
 from .models import Order
 from .models import PhoneAlert, EmailAlert
 
+def email_credentials():
+    load_dotenv()
+    return os.getenv('EMAIL_ADDRESS'), os.getenv('EMAIL_PASSWORD')
+
 def get_message(order):
     message = []
     address = order.shipping_address
@@ -18,14 +22,14 @@ def get_message(order):
     return "\n".join(message)
 
 def notify_order(order):
-    EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
-    EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
-    phone_alert(order, EMAIL_ADDRESS, EMAIL_PASSWORD)
-    email_alert(order, EMAIL_ADDRESS, EMAIL_PASSWORD)
+    address, password = email_credentials()
+    phone_alert(order, address, password)
+    email_alert(order, address, password)
+    track_order(order, address, password)
 
 def email_alert(order, address, password):
     try:
-        with smtplib.SMTP_SSL('smtp.mail.yahoo.com', 465) as smtp:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
             smtp.login(address, password)
             emails = EmailAlert.objects.values_list('email', flat=True).iterator()
 
@@ -59,8 +63,31 @@ def phone_alert(order, address, password):
         msg['To'] = to_email
 
         try:
-            with smtplib.SMTP_SSL('smtp.mail.yahoo.com', 465) as smtp:
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
                 smtp.login(address, password)
                 smtp.send_message(msg)
         except Exception as e:
             print(f'Error sending phone alert: {e}')
+
+def get_tracking_msg(order):
+    msg = []
+
+    msg.append("Thank you for your purchase!\n\n")
+    msg.append(f"View your order at https://woolandwicker.vercel.app/shipment/{order.code}/")
+
+    return ("").join(msg)
+
+def track_order(order, address, password):
+    if order.email:
+        msg = EmailMessage()
+        msg.set_content(get_tracking_msg(order))
+        msg['Subject'] = "Order Placed"
+        msg['From'] = address
+        msg['To'] = order.email
+
+        try:
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+                smtp.login(address, password)
+                smtp.send_message(msg)
+        except Exception as e:
+            print(f'Error sending Email: {e}')

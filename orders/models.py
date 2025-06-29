@@ -19,7 +19,7 @@ class Address(models.Model):
 class Order(models.Model):
     # User info
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    email=models.EmailField(null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
 
     # Shipping info
     order_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

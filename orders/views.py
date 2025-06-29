@@ -55,6 +55,7 @@ def stripe_webhook(request):
             order.stripe_payment_intent_id = intent['id']
             order.save()
 
+
             # Update amounts for each Product in inventory
             for item in order.items.all():
                 product = item.product
