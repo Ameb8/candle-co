@@ -41,6 +41,7 @@ def orders_by_category(request):
         .order_by('product__category')
     )
 
+    # Data to track
     categories = [entry['product__category'] or 'Uncategorized' for entry in data]
     quantities = [entry['total_quantity'] for entry in data]
 
