@@ -26,6 +26,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('design/', include('page_design.urls')),
     path('order/', include('orders.urls')),
+    path('metrics/', include('metrics.urls')),
 ]
 
 # Serve media files in development
