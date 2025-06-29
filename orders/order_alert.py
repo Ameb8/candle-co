@@ -85,7 +85,7 @@ def track_order(order, address, password):
         msg['From'] = address
         msg['To'] = order.email
 
-        try:
+        try: # Send message
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
                 smtp.login(address, password)
                 smtp.send_message(msg)
