@@ -1,11 +1,14 @@
-import plotly.graph_objs as go
-import plotly.offline as opy
-from django.http import HttpResponse
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 from django.db.models.functions import TruncDate
-from django.db.models import Count
-from orders.models import Order
+from django.db.models import Count, Sum
+from orders.models import Order, OrderItem
 
-
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAdminUser])
 def orders_over_time(request):
     orders_by_date = (
         Order.objects
@@ -15,15 +18,33 @@ def orders_over_time(request):
         .order_by('date')
     )
 
+    # Prepare data as lists
     dates = [entry['date'] for entry in orders_by_date]
     counts = [entry['count'] for entry in orders_by_date]
 
-    trace = go.Scatter(x=dates, y=counts, mode='lines+markers', name='Orders')
-    layout = go.Layout(title='Orders Over Time', xaxis=dict(title='Date'), yaxis=dict(title='Number of Orders'))
-    fig = go.Figure(data=[trace], layout=layout)
+    # Serialize dates as ISO strings
+    dates = [d.isoformat() if d else None for d in dates]
 
+    return Response({
+        'dates': dates,
+        'counts': counts,
+    })
 
-    plot_div = opy.plot(fig, auto_open=False, output_type='div', include_plotlyjs=False)
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAdminUser])
+def orders_by_category(request):
+    data = (
+        OrderItem.objects
+        .values('product__category')
+        .annotate(total_quantity=Sum('quantity'))
+        .order_by('product__category')
+    )
 
-    return HttpResponse(plot_div)
+    categories = [entry['product__category'] or 'Uncategorized' for entry in data]
+    quantities = [entry['total_quantity'] for entry in data]
 
+    return Response({
+        'categories': categories,
+        'quantities': quantities,
+    })
