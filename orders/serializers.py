@@ -88,3 +88,12 @@ class EmailAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAlert
         fields = ['email']
+
+class ShippingRateRequestSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    to_name = serializers.CharField()
+    to_street1 = serializers.CharField()
+    to_city = serializers.CharField()
+    to_state = serializers.CharField()
+    to_zip = serializers.CharField()
+    to_country = serializers.CharField()
