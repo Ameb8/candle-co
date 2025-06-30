@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 import stripe
+import shippo
 import json
 from .order_alert import notify_order
 from .models import Order, OrderItem, Address, Shipment, PhoneAlert, EmailAlert
@@ -21,7 +22,8 @@ from .serializers import (
     ShipmentSerializer,
     PublicOrderSummarySerializer,
     PhoneAlertSerializer,
-    EmailAlertSerializer
+    EmailAlertSerializer,
+    ShippingRateRequestSerializer,
 )
 
 stripe.api_key = settings.STRIPE_SECRET_KEY

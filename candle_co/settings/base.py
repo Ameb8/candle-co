@@ -88,6 +88,8 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv('CLOUDINARY_SECRET')
 }
 
+SHIPPO_KEY = os.getenv('SHIPPO_KEY')
+
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 CORS_ALLOW_CREDENTIALS = True
